@@ -1,0 +1,222 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "금리 gap 공개 결과 스키마",
+  "description": "버전 5 · 해시는 data_sha256 필드를 제외한 정렬된 UTF-8 JSON의 SHA-256입니다. 결측 수치는 null입니다.",
+  "type": "object",
+  "required": ["$schema", "schema_version", "brief", "matrix", "disclaimer", "as_of_date", "oldest_observation_date", "evaluated_date", "date_basis", "sources", "rates", "calendar", "data_sha256"],
+  "properties": {
+    "$schema": {"type": "string", "format": "uri"},
+    "schema_version": {"type": "integer", "const": 5},
+    "brief": {
+      "type": "object",
+      "required": ["as_of_date", "funding", "groups", "checks", "disclaimer"],
+      "properties": {
+        "as_of_date": {"$ref": "#/$defs/nullableDate"},
+        "disclaimer": {"type": "string"},
+        "summary_sentence": {"type": ["string", "null"]},
+        "funding": {
+          "type": "object",
+          "required": ["as_of_date", "funding_rate_percent", "government_rate_percent", "spread_bp", "percentile_full", "percentile_1y", "unavailable_reason"],
+          "properties": {
+            "as_of_date": {"$ref": "#/$defs/nullableDate"},
+            "funding_rate_percent": {"type": ["number", "null"]},
+            "government_rate_percent": {"type": ["number", "null"]},
+            "spread_bp": {"type": ["number", "null"]},
+            "percentile_full": {"$ref": "#/$defs/percentile"},
+            "percentile_1y": {"$ref": "#/$defs/percentile"},
+            "unavailable_reason": {"type": ["string", "null"]}
+          }
+        },
+        "groups": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["key", "label", "as_of_date", "rows", "summary", "summary_unavailable_reason"],
+            "properties": {
+              "key": {"type": "string"},
+              "label": {"type": "string"},
+              "as_of_date": {"$ref": "#/$defs/nullableDate"},
+              "rows": {"type": "array", "items": {"$ref": "#/$defs/gapRow"}},
+              "summary": {
+                "type": ["object", "null"],
+                "required": ["direction", "baseline_date", "as_of_date", "available_rows", "market_spread_change_bp", "funding_spread_change_bp", "main_factor"],
+                "properties": {
+                  "direction": {"type": "string"},
+                  "baseline_date": {"$ref": "#/$defs/date"},
+                  "as_of_date": {"$ref": "#/$defs/date"},
+                  "available_rows": {"type": "integer"},
+                  "market_spread_change_bp": {"type": "number"},
+                  "funding_spread_change_bp": {"type": "number"},
+                  "main_factor": {"type": ["string", "null"]}
+                }
+              },
+              "summary_unavailable_reason": {"type": ["string", "null"]}
+            }
+          }
+        },
+        "checks": {
+          "type": "object",
+          "required": ["as_of_date", "exceptions", "all_changes", "unavailable_changes", "latest_dates_differ"],
+          "properties": {
+            "as_of_date": {"$ref": "#/$defs/nullableDate"},
+            "exceptions": {"type": "array", "items": {"$ref": "#/$defs/briefChange"}},
+            "all_changes": {"type": "array", "items": {"$ref": "#/$defs/briefChange"}},
+            "unavailable_changes": {"type": "array", "items": {"$ref": "#/$defs/unavailableChange"}},
+            "latest_dates_differ": {"type": "boolean"}
+          }
+        }
+      }
+    },
+    "matrix": {
+      "type": "object",
+      "required": ["as_of_date", "tenors", "families", "cells", "disclaimer", "warnings"],
+      "properties": {
+        "as_of_date": {"$ref": "#/$defs/nullableDate"},
+        "tenors": {"type": "array", "items": {"type": "integer"}},
+        "families": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["key", "label", "grades"],
+            "properties": {
+              "key": {"type": "string"},
+              "label": {"type": "string"},
+              "grades": {"type": "array", "items": {"type": "string"}}
+            }
+          }
+        },
+        "cells": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "family", "tenor", "grade", "series_key", "as_of_date", "gap_bp", "percentile_full", "percentile_1y", "month", "unavailable_reason", "reason_code", "sample_start_date", "sample_end_date", "history_complete", "sample_is_short", "collection_warning"],
+            "properties": {
+              "id": {"type": "string"},
+              "family": {"type": "string"},
+              "tenor": {"type": "integer"},
+              "grade": {"type": "string"},
+              "series_key": {"type": "string"},
+              "as_of_date": {"$ref": "#/$defs/nullableDate"},
+              "gap_bp": {"type": ["number", "null"]},
+              "percentile_full": {"$ref": "#/$defs/percentile"},
+              "percentile_1y": {"$ref": "#/$defs/percentile"},
+              "month": {"$ref": "#/$defs/month"},
+              "unavailable_reason": {"type": ["string", "null"]},
+              "reason_code": {"type": ["string", "null"]},
+              "sample_start_date": {"$ref": "#/$defs/nullableDate"},
+              "sample_end_date": {"$ref": "#/$defs/nullableDate"},
+              "history_complete": {"type": "boolean"},
+              "sample_is_short": {"type": "boolean"},
+              "collection_warning": {"type": ["string", "null"]}
+            }
+          }
+        },
+        "disclaimer": {"type": "string"},
+        "warnings": {"type": "array", "items": {"type": "string"}},
+        "methodology": {"type": "object", "description": "선택 항목 · 금리 gap 산출 방식과 표본 범위"}
+      }
+    },
+    "disclaimer": {"type": "string"},
+    "as_of_date": {"$ref": "#/$defs/date", "description": "한국 달력 시리즈(KDB·KOFIA)의 최신 관측일. us_close_date 행은 제외"},
+    "oldest_observation_date": {"$ref": "#/$defs/date", "description": "한국 달력 시리즈의 가장 오래된 최신 관측일. us_close_date 행은 제외"},
+    "evaluated_date": {"$ref": "#/$defs/nullableDate"},
+    "date_basis": {"type": "string"},
+    "sources": {
+      "type": "object",
+      "required": ["KDB", "KOFIA", "UST"],
+      "properties": {"KDB": {"type": "string", "format": "uri"}, "KOFIA": {"type": "string", "format": "uri"}, "UST": {"type": "string", "format": "uri", "description": "미 재무부 Daily Treasury Par Yield Curve Rates"}}
+    },
+    "kdb_provisional": {
+      "type": ["object", "null"],
+      "description": "선택 · KDB 당일 잠정치가 있으면 적용일·시리즈·확정 시각",
+      "properties": {"effective_date": {"$ref": "#/$defs/date"}, "series": {"type": "array", "items": {"type": "string"}}, "finalizes_at": {"type": "string"}}
+    },
+    "rates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["series", "source", "date_kind", "observed_date", "rate_percent"],
+        "properties": {
+          "series": {"type": "string"},
+          "source": {"type": "string", "enum": ["KDB", "KOFIA", "UST"]},
+          "date_kind": {"type": "string", "enum": ["effective_date", "evaluation_date", "trading_date", "us_close_date"], "description": "us_close_date는 미국 동부(ET) 거래일이며 뉴욕 마감은 KST 익일 06:00(EDT)·07:00(EST)이다"},
+          "observed_date": {"$ref": "#/$defs/date"},
+          "rate_percent": {"type": ["number", "null"]},
+          "provisional": {"type": "boolean", "description": "선택 · KDB 당일 잠정치(09:05 KST 확정치로 교체 예정)"}
+        }
+      }
+    },
+    "calendar": {
+      "type": "object",
+      "required": ["timezone", "verified_from", "verified_through", "closures"],
+      "properties": {
+        "timezone": {"type": "string", "const": "Asia/Seoul"},
+        "verified_from": {"$ref": "#/$defs/date"},
+        "verified_through": {"$ref": "#/$defs/date"},
+        "closures": {"type": "array", "items": {"$ref": "#/$defs/date"}}
+      }
+    },
+    "data_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+  },
+  "$defs": {
+    "date": {"type": "string", "format": "date", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"},
+    "nullableDate": {"type": ["string", "null"], "format": "date", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"},
+    "percentile": {
+      "type": ["object", "null"],
+      "required": ["rank", "n"],
+      "properties": {"rank": {"type": "integer", "minimum": 0, "maximum": 100}, "n": {"type": "integer", "minimum": 1}}
+    },
+    "month": {
+      "type": ["object", "null"],
+      "required": ["baseline_date", "as_of_date", "change_bp", "market_spread_change_bp", "funding_spread_change_bp", "main_factor"],
+      "properties": {
+        "baseline_date": {"$ref": "#/$defs/date"},
+        "as_of_date": {"$ref": "#/$defs/date"},
+        "change_bp": {"type": "number"},
+        "market_spread_change_bp": {"type": "number"},
+        "funding_spread_change_bp": {"type": "number"},
+        "main_factor": {"type": ["string", "null"]}
+      }
+    },
+    "gapRow": {
+      "type": "object",
+      "required": ["grade", "series_key", "as_of_date", "gap_bp", "percentile_full", "percentile_1y", "month", "unavailable_reason"],
+      "properties": {
+        "grade": {"type": "string"},
+        "series_key": {"type": "string"},
+        "as_of_date": {"$ref": "#/$defs/nullableDate"},
+        "gap_bp": {"type": ["number", "null"]},
+        "percentile_full": {"$ref": "#/$defs/percentile"},
+        "percentile_1y": {"$ref": "#/$defs/percentile"},
+        "month": {"$ref": "#/$defs/month"},
+        "unavailable_reason": {"type": ["string", "null"]}
+      }
+    },
+    "briefChange": {
+      "type": "object",
+      "required": ["series_key", "label", "category", "period", "latest_date", "baseline_date", "current_value", "change_bp", "is_exception"],
+      "properties": {
+        "series_key": {"type": "string"},
+        "label": {"type": "string"},
+        "category": {"type": "string"},
+        "period": {"type": "string"},
+        "latest_date": {"$ref": "#/$defs/date"},
+        "baseline_date": {"$ref": "#/$defs/date"},
+        "current_value": {"type": "number"},
+        "change_bp": {"type": "number"},
+        "is_exception": {"type": "boolean"}
+      }
+    },
+    "unavailableChange": {
+      "type": "object",
+      "required": ["series_key", "label", "category", "period", "latest_date"],
+      "properties": {
+        "series_key": {"type": "string"},
+        "label": {"type": "string"},
+        "category": {"type": "string"},
+        "period": {"type": "string"},
+        "latest_date": {"$ref": "#/$defs/date"}
+      }
+    }
+  }
+}
